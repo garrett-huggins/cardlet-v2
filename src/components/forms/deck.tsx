@@ -25,6 +25,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { X, Eye } from "lucide-react";
 
 const Card = z.object({
   question: z.string().nonempty({
@@ -59,6 +60,17 @@ export function CreateDeckForm({ client }: { client: SupabaseClient }) {
   const addCard = (card: z.infer<typeof Card>) => {
     setCards((prev) => {
       const updatedCards = [...prev, card];
+      form.setValue("cards", updatedCards); // Sync with form state
+      if (form.formState.errors.cards) {
+        form.clearErrors("cards"); // Clear validation error if present
+      }
+      return updatedCards;
+    });
+  };
+
+  const removeCard = (index: number) => {
+    setCards((prev) => {
+      const updatedCards = prev.filter((_, i) => i !== index);
       form.setValue("cards", updatedCards); // Sync with form state
       if (form.formState.errors.cards) {
         form.clearErrors("cards"); // Clear validation error if present
@@ -172,7 +184,11 @@ export function CreateDeckForm({ client }: { client: SupabaseClient }) {
         {previewCards && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {cards.map((card, index) => (
-              <CardPreview key={index} card={card} />
+              <CardPreview
+                removeCard={() => removeCard(index)}
+                key={index}
+                card={card}
+              />
             ))}
           </div>
         )}
@@ -184,15 +200,30 @@ export function CreateDeckForm({ client }: { client: SupabaseClient }) {
   );
 }
 
-const CardPreview = ({ card }: { card: z.infer<typeof Card> }) => {
+const CardPreview = ({
+  removeCard,
+  card,
+}: {
+  removeCard: () => void;
+  card: z.infer<typeof Card>;
+}) => {
   const [isFlipped, setIsFlipped] = useState(false);
   return (
     <CardContainer>
       <CardContent>
         {isFlipped ? <p>{card.answer}</p> : <p>{card.question}</p>}
       </CardContent>
-      <CardFooter>
-        <Button onClick={() => setIsFlipped((prev) => !prev)}>a</Button>
+      <CardFooter className="flex justify-between">
+        <Button
+          size="icon"
+          variant={isFlipped ? "secondary" : "default"}
+          onClick={() => setIsFlipped((prev) => !prev)}
+        >
+          <Eye />
+        </Button>
+        <Button size="icon" variant="destructive" onClick={removeCard}>
+          <X />
+        </Button>
       </CardFooter>
     </CardContainer>
   );
