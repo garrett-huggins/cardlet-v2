@@ -36,6 +36,7 @@ type CardPreviewProps = {
 };
 
 export function CardPreviewClient({ id, deck }: CardPreviewProps) {
+  const [isLoading, setIsLoading] = useState(false);
   const [gridView, setGridView] = useState<1 | 2 | 3>(3);
 
   const gridClass =
@@ -72,6 +73,7 @@ export function CardPreviewClient({ id, deck }: CardPreviewProps) {
   const client = createClerkSupabaseClient();
 
   const handleDelete = async () => {
+    setIsLoading(true);
     await deleteDeck({ client, id });
     toast.success("Deck deleted");
     redirect("/decks");
@@ -84,7 +86,7 @@ export function CardPreviewClient({ id, deck }: CardPreviewProps) {
           <Link href={`/decks/${id}/test`}>Test Yourself</Link>
         </Button>
         <div className="flex space-x-2">
-          <DeleteDeckDialog handleDelete={handleDelete} />
+          <DeleteDeckDialog isLoading={isLoading} handleDelete={handleDelete} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="hidden md:flex">
@@ -115,10 +117,16 @@ export function CardPreviewClient({ id, deck }: CardPreviewProps) {
   );
 }
 
-const DeleteDeckDialog = ({ handleDelete }: { handleDelete: () => void }) => {
+const DeleteDeckDialog = ({
+  isLoading,
+  handleDelete,
+}: {
+  isLoading: boolean;
+  handleDelete: () => void;
+}) => {
   return (
     <AlertDialog>
-      <Button asChild variant="destructive">
+      <Button disabled={isLoading} asChild variant="destructive">
         <AlertDialogTrigger>Delete</AlertDialogTrigger>
       </Button>
       <AlertDialogContent>

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createDeck } from "@/db/decks";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CardForm } from "./card";
 import {
   Card as CardContainer,
@@ -46,6 +46,7 @@ const Deck = z.object({
 });
 
 export function CreateDeckForm({ client }: { client: SupabaseClient }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewCards, setPreviewCards] = useState(false);
   const handlePreview = () => setPreviewCards((prev) => !prev);
 
@@ -85,8 +86,6 @@ export function CreateDeckForm({ client }: { client: SupabaseClient }) {
         cards: values.cards,
       },
     });
-    toast.success("Deck created");
-    redirect("/decks");
   }
 
   // useEffect(() => {
@@ -104,6 +103,23 @@ export function CreateDeckForm({ client }: { client: SupabaseClient }) {
   //     fetchCourses();
   //   }
   // }, [isLoaded, userId, client]);
+
+  useEffect(() => {
+    if (form.formState.isSubmitSuccessful) {
+      toast.success("Deck created");
+      redirect("/decks");
+    }
+    if (form.formState.isSubmitting) {
+      setIsSubmitting(true);
+    }
+    if (!form.formState.isSubmitting && isSubmitting) {
+      setIsSubmitting(false);
+    }
+  }, [
+    form.formState.isSubmitting,
+    isSubmitting,
+    form.formState.isSubmitSuccessful,
+  ]);
 
   return (
     <>
@@ -161,7 +177,9 @@ export function CreateDeckForm({ client }: { client: SupabaseClient }) {
           </div>
         )}
       </div>
-      <Button onClick={form.handleSubmit(onSubmit)}>Create Deck</Button>
+      <Button disabled={isSubmitting} onClick={form.handleSubmit(onSubmit)}>
+        Create Deck
+      </Button>
     </>
   );
 }
